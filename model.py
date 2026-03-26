@@ -6,7 +6,7 @@ import torch.nn as nn
 
 # Model
 class CharModel(nn.Module):
-    def __init__(self, context_size, voc_size, embedding_dim, hidden_dims):
+    def __init__(self, voc_size, embedding_dim, hidden_dims):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.E = nn.Embedding(voc_size, embedding_dim)
@@ -19,7 +19,6 @@ class CharModel(nn.Module):
 
     def attention_scores_matrix(self, Q_vector, K_vector):
         n = len(Q_vector)
-        dim = len(Q_vector[0])
         matrix = torch.zeros(shape=(n, n), dtype=torch.float32)
 
         for i in range(0, n):
