@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
+
 from data import load_data
 from model import Femto_Chatbot
 
-EMBEDDING_DIM = 256
-CONTEXT_SIZE = 10
+EMBEDDING_DIM = 32
+CONTEXT_SIZE = 5
 FILENAME = "shakespeare.txt"
 
 
@@ -30,4 +31,5 @@ def generate_new_sentences():
 
 
 if __name__ == "__main__":
-    generate_new_sentences()
+    for i in range(0, 10):
+        print(generate_new_sentences())

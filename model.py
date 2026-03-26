@@ -31,7 +31,7 @@ class Femto_Chatbot(nn.Module):
 
         return matrix
 
-    def forward(self, tokens):
+    def forward_old(self, tokens):
 
         n = len(tokens)
 
@@ -51,4 +51,21 @@ class Femto_Chatbot(nn.Module):
 
         logits = self.P(x)
 
+        return logits
+
+    def forward(self, tokens):
+        seq_len = tokens.shape[-1]
+        x = self.E(tokens)
+        Q = self.W_Q(x)
+        K = self.W_K(x)
+        V = self.W_V(x)
+
+        scores = Q @ K.transpose(-2, -1) / math.sqrt(self.embedding_dim)
+
+        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
+        scores = scores.masked_fill(mask, float("-inf"))
+
+        weights = torch.softmax(scores, dim=-1)
+        x = weights @ V
+        logits = self.P(x)
         return logits
