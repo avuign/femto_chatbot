@@ -1,13 +1,6 @@
-def encoding_dic(words):
-    encoding = {word: i for i, word in enumerate(list(set(words)))}
-    decoding = {i: word for word, i in encoding.items()}
-    return encoding, decoding
-
-
-def text_to_input(words, context_size):
+def text_to_input(words, context_size, dic):
     contexts = []
     targets = []
-    dic, _ = encoding_dic(words)
     for i in range(0, len(words) - context_size):
         window = words[i : i + context_size]
         target = words[i + context_size]
@@ -24,5 +17,9 @@ def text_to_input(words, context_size):
 def load_data(filename, context_size):
     with open(filename) as text:
         words = text.read().split()
-    input_context, targets = text_to_input(words, context_size)
-    return input_context, targets
+
+    dic = {word: i for i, word in enumerate(list(set(words)))}
+    # decoding = {i: word for word, i in dic.items()}
+    #
+    input_context, targets = text_to_input(words, context_size, dic)
+    return input_context, targets, dic

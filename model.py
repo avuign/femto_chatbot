@@ -5,8 +5,8 @@ import torch.nn as nn
 
 
 # Model
-class CharModel(nn.Module):
-    def __init__(self, voc_size, embedding_dim, hidden_dims):
+class Femto_Chatbot(nn.Module):
+    def __init__(self, voc_size, embedding_dim):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.E = nn.Embedding(voc_size, embedding_dim)
