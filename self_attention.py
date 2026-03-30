@@ -40,9 +40,9 @@ class Attention_Block(nn.Module):
     def forward(self, x):
         b, num_tokens, d_in = x.shape
 
-        keys = self.W_key(x)  # Shape: (b, num_tokens, d_out)
-        queries = self.W_query(x)
-        values = self.W_value(x)
+        keys = self.W_k(x)  # Shape: (b, num_tokens, d_out)
+        queries = self.W_q(x)
+        values = self.W_v(x)
 
         keys = keys.view(b, num_tokens, self.num_heads, self.head_dim)
         values = values.view(b, num_tokens, self.num_heads, self.head_dim)
