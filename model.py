@@ -1,55 +1,50 @@
-import math
-
 import torch
 import torch.nn as nn
+from transformer import LayerNorm, Transformer_Block
 
 
 # Model
-class Femto_Chatbot(nn.Module):
-    def __init__(self, voc_size, context_size, embedding_dim):
+class Femto_GPT(nn.Module):
+    def __init__(
+        self,
+        voc_size,
+        n_layers,
+        embedding_dim,
+        hidden_dim,
+        context_length,
+        n_heads,
+        drop_rate,
+        qkv_bias,
+    ):
         super().__init__()
-        self.embedding_dim = embedding_dim
+        self.tok_emb = nn.Embedding(voc_size, embedding_dim)
+        self.pos_emb = nn.Embedding(context_length, embedding_dim)
+        self.drop_emb = nn.Dropout(drop_rate)
 
-        self.token_embedding = torch.nn.Embedding(voc_size, embedding_dim)
-        self.pos_embedding = torch.nn.Embedding(context_size, embedding_dim)
-
-        self.input_embedding = self.token_embedding + self.pos_embedding
-
-        self.W_Q = nn.Linear(embedding_dim, embedding_dim)
-        self.W_K = nn.Linear(embedding_dim, embedding_dim)
-        self.W_V = nn.Linear(embedding_dim, embedding_dim)
-
-        self.P = nn.Linear(embedding_dim, voc_size)
-
-        self.ff = nn.Sequential(
-            nn.Linear(embedding_dim, 4 * embedding_dim),
-            nn.ReLU(),
-            nn.Linear(4 * embedding_dim, embedding_dim),
+        self.trf_blocks = nn.Sequential(
+            *[
+                Transformer_Block(
+                    embedding_dim,
+                    hidden_dim,
+                    context_length,
+                    n_heads,
+                    drop_rate,
+                    qkv_bias,
+                )
+                for _ in range(n_layers)
+            ]
         )
 
-        self.ln1 = nn.LayerNorm(embedding_dim)
-        self.ln2 = nn.LayerNorm(embedding_dim)
+        self.final_norm = LayerNorm(embedding_dim)
+        self.out_head = nn.Linear(embedding_dim, voc_size, bias=False)
 
-        self.pos_E = nn.Embedding(context_size, embedding_dim)
-
-    def forward(self, tokens):
-        seq_len = tokens.shape[-1]
-        x = self.E(tokens)
-
-        positions = torch.arange(seq_len)
-        x = x + self.pos_E(positions)
-
-        Q = self.W_Q(x)
-        K = self.W_K(x)
-        V = self.W_V(x)
-
-        scores = Q @ K.transpose(-2, -1) / math.sqrt(self.embedding_dim)
-
-        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
-        scores = scores.masked_fill(mask, float("-inf"))
-
-        weights = torch.softmax(scores, dim=-1)
-        x = weights @ V
-        x = self.ff(x)
-        logits = self.P(x)
+    def forward(self, in_idx):
+        batch_size, seq_len = in_idx.shape
+        tok_embeds = self.tok_emb(in_idx)
+        pos_embeds = self.pos_emb(torch.arange(seq_len, device=in_idx.device))
+        x = tok_embeds + pos_embeds  # Shape [batch_size, num_tokens, emb_size]
+        x = self.drop_emb(x)
+        x = self.trf_blocks(x)
+        x = self.final_norm(x)
+        logits = self.out_head(x)
         return logits

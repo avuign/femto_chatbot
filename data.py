@@ -8,6 +8,7 @@ class Tokenizer:
     def __init__(self, dic):
         self.word_to_int = dic
         self.int_to_word = {int: word for word, int in dic.items()}
+        self.voc_size = len(dic)
 
     def encode(self, text):
         words = [
